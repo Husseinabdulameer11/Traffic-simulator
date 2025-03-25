@@ -1,0 +1,43 @@
+### IntelliJ IDEA ###
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
+
+.idea/httpRequests/
+.idea/dataSources/
+.idea/dataSources.local.xml
+.idea/usage.statistics.xml
+.idea/other.xml
+.idea/uiDesigner.xml
+.idea/gradle.xml
+.idea/compiler.xml
+*.iml          # Optional: ignore if you don’t want to share IntelliJ project files
+*.class        # compiled bytecode
+*.log
+*.tmp
+*.DS_Store     # macOS
