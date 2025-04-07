@@ -28,7 +28,7 @@ Simuleringen viser kjøretøy som navigerer et veinettverk, følger tilordnede k
 ### Obligatoriske Funksjoner Implementert:
 
 *   **Viktige Trafikkenheter:**
-    *   Implementerer et sentralt, fireveis **lyskryss** (`JunctionType.TRAFFIC_LIGHT`) der biler og trafikklys samhandler. *(Merk: Selv om oppgaven krevde minst 3 kryss, fokuserer denne implementasjonen på mekanismene i ett fullt fungerende lyskryss).*
+    *   Implementerer et sentralt, fireveis **lyskryss** (`JunctionType.TRAFFIC_LIGHT`) der biler og trafikklys samhandler. 
     *   **Trafikklys** (`TrafficLight`, `TrafficLightCycleManager`) veksler korrekt mellom RØDT, GULT, og GRØNT i synkroniserte sykluser for N/S og E/W retninger.
     *   Flere (konfigurerbart antall via `VehicleManager`) **kjøretøy** (`Vehicle`) opererer uavhengig, med tilfeldige farger og typer (Bil/Lastebil).
     *   Kjøretøy følger definerte **kjørefelt** (`Lane`) med korrekt høyrekjøring (offset fra veiens midtlinje).
