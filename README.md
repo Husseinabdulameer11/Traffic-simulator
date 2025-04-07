@@ -1,6 +1,6 @@
 # OBJ2100 Oblig 2 (Vår 2025): Trafikksimulering - Gruppe 1
 
-Dette prosjektet er en del av Obligatorisk Oppgave 2 i kurset OBJ2100 Objektorientert Programmering 2 ved **Universitetet i Sørøst-Norge (USN)**.
+Dette prosjektet er en del av Obligatorisk Oppgave 2 i emnet OBJ2100 Objektorientert Programmering 2 ved **Universitetet i Sørøst-Norge (USN)** som del av bachelor i IT.
 
 ## Oversikt
 
@@ -15,11 +15,10 @@ Simuleringen viser kjøretøy som navigerer et veinettverk, følger tilordnede k
 *   Hussein Khudhaer Abdul-Ameer
 *   Khalif Cali Maxamed
 
-*(Merk: Detaljert ansvarsfordeling skal inkluderes i det separate PDF-dokumentet ved innlevering).*
 
-## Kurskontekst
+## Emnekontekst
 
-*   **Kurs:** OBJ2100 Objektorientert Programmering 2
+*   **Emne:** OBJ2100 Objektorientert Programmering 2
 *   **Universitet:** Universitetet i Sørøst-Norge (USN)
 *   **Periode:** Vår 2025
 *   **Oppgave:** Obligatorisk Oppgave 2 - Prosjekt 1: Trafikksimulering
@@ -45,7 +44,7 @@ Simuleringen viser kjøretøy som navigerer et veinettverk, følger tilordnede k
 
 ### Valgfrie Funksjoner Implementert:
 
-*(Merk av med [X] for de dere faktisk har fullført - minimum én kreves)*
+
 
 *   **[X] Logging eller Visualisering:**
     *   **Visualisering:** Hele simuleringen er visualisert grafisk ved hjelp av JavaFX Canvas. Kjøretøybevegelser, kjørefelt, kryss og trafikklysenes tilstand vises dynamisk.
@@ -64,14 +63,14 @@ Simuleringen viser kjøretøy som navigerer et veinettverk, følger tilordnede k
 
 *   **Språk:** Java (JDK 17+)
 *   **Grafikk/GUI:** JavaFX (Canvas API)
-*   **IDE:** [Fyll inn IDE, f.eks. IntelliJ IDEA, Eclipse, VS Code]
+*   **IDE:** [IntelliJ]
 
 ## Oppsett og Kjøring
 
 1.  **Forutsetninger:**
     *   Java Development Kit (JDK) versjon 17 eller nyere.
     *   JavaFX SDK riktig konfigurert for ditt system/IDE. Se [OpenJFX Getting Started](https://openjfx.io/openjfx-docs/).
-2.  **Klon Repository:** `git clone [URL til deres repo]`
+2.  **Klon Repository:** `git clone [https://github.com/Husseinabdulameer11/Traffic-simulator.git]`
 3.  **Åpne i IDE:** Åpne prosjektmappen i din IDE.
 4.  **Konfigurer JavaFX (om nødvendig):**
     *   Legg til JavaFX i prosjektets biblioteker/avhengigheter.
