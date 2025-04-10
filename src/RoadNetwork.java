@@ -23,7 +23,7 @@ public class RoadNetwork {
     private final List<TrafficLightCycleManager> lightCycleManagers = new ArrayList<>(); // Managers controlling cycles
     // Random number generator for choosing lanes/roads
     private final Random random = new Random();
-
+    private Road centralRoad;
     /**
      * Constructs the RoadNetwork, creating the initial layout and connecting components.
      *
@@ -72,6 +72,148 @@ public class RoadNetwork {
         roads.add(new Road(w / 2, h / 2 + approachOffset, w / 2, h)); // South
         roads.add(new Road(0, h / 2, w / 2 - approachOffset, h / 2)); // West
     }
+    private void createTrafficLightIntersection(double w, double h) {
+        System.out.println("Creating Two Traffic Light Intersections with Shared Central Road...");
+
+        // Create two junctions 400 units apart horizontally
+        double junctionSpacing = 400;
+        double junctionRadius = 40;
+        Junction leftJunction = new Junction(w/2 - 200, h/2, junctionRadius, JunctionType.TRAFFIC_LIGHT);
+        Junction rightJunction = new Junction(w/2 + 200, h/2, junctionRadius, JunctionType.TRAFFIC_LIGHT);
+        junctions.addAll(List.of(leftJunction, rightJunction));
+
+        // Central road starts/ends 20 units away from junctions to allow approach roads
+        centralRoad = new Road(
+                leftJunction.getX() + leftJunction.getRadius() + 20, // Add 20-unit gap
+                leftJunction.getY(),
+                rightJunction.getX() - rightJunction.getRadius() - 20, // Add 20-unit gap
+                rightJunction.getY()
+        );
+        roads.add(centralRoad);
+
+        // Create roads for both junctions (now with valid approach roads)
+        createJunctionApproachRoads(leftJunction, w, h, true, centralRoad);
+        createJunctionApproachRoads(rightJunction, w, h, false, centralRoad);
+
+        // Configure traffic light systems
+        configureJunctionWithLights(leftJunction, 7000, 1500);
+        configureJunctionWithLights(rightJunction, 5000, 2000);
+
+        System.out.println("Shared central road configured between junctions.");
+    }
+    private void createJunctionApproachRoads(
+            Junction junction,
+            double w, double h,
+            boolean isLeftJunction,
+            Road centralRoad // Reference to the shared central road
+    ) {
+        double jx = junction.getX();
+        double jy = junction.getY();
+        double radius = junction.getRadius();
+
+        // North-South Roads (unchanged)
+        roads.add(new Road(jx, 0, jx, jy - radius));  // North approach
+        roads.add(new Road(jx, jy + radius, jx, h));  // South approach
+
+        // East-West Roads (connect to shared central road instead of creating new ones)
+        if (isLeftJunction) {
+            // Left Junction's EAST approach: connects to start of central road
+            roads.add(new Road(
+                    jx + radius, jy,
+                    centralRoad.getStartX(), centralRoad.getStartY() // Link to central road
+            ));
+            // West approach (unchanged)
+            roads.add(new Road(0, jy, jx - radius, jy));
+        } else {
+            // Right Junction's WEST approach: connects to end of central road
+            roads.add(new Road(
+                    centralRoad.getEndX(), centralRoad.getEndY(),
+                    jx - radius, jy // Link to central road
+            ));
+            // East approach (unchanged)
+            roads.add(new Road(jx + radius, jy, w, jy));
+        }
+    }
+    private void configureJunctionWithLights(Junction junction, long greenTime, long yellowTime) {
+        Map<Lane, TrafficLight> lightMap = new HashMap<>();
+
+        TrafficLightCycleManager manager = new TrafficLightCycleManager(
+                junction.getId(),
+                LightState.RED,
+                LightState.GREEN,
+                greenTime,
+                yellowTime,
+                greenTime + yellowTime
+        );
+        lightCycleManagers.add(manager);
+
+        for (Road road : roads) {
+            if (roadConnectsTo(road, junction)) {
+                Lane incomingLane = getIncomingLaneFor(road, junction);
+                if (incomingLane == null) continue;
+
+                // --- Skip ONLY the central road itself ---
+                boolean isCentralApproach = road == centralRoad; // Simplified check
+
+                if (isCentralApproach) {
+                    continue;
+                }
+
+                // --- Create light for valid lanes ---
+                TrafficLight light = createAndPlaceLightForLane(incomingLane, isVerticalLane(incomingLane));
+                lightMap.put(incomingLane, light);
+                trafficLights.add(light); // Explicitly add to list (redundant safety)
+
+                if (isVerticalLane(incomingLane)) {
+                    manager.addNsLight(light);
+                } else {
+                    manager.addEwLight(light);
+                }
+            }
+        }
+
+        junction.setupTrafficLights(manager, lightMap);
+    }
+
+
+    // Updated connection check using junction radius
+    private boolean roadConnectsTo(Road road, Junction junction) {
+        // Calculate distance from road's start to junction
+        double dxStart = road.getStartX() - junction.getX();
+        double dyStart = road.getStartY() - junction.getY();
+        double distanceStart = Math.sqrt(dxStart * dxStart + dyStart * dyStart);
+
+        // Calculate distance from road's end to junction
+        double dxEnd = road.getEndX() - junction.getX();
+        double dyEnd = road.getEndY() - junction.getY();
+        double distanceEnd = Math.sqrt(dxEnd * dxEnd + dyEnd * dyEnd);
+
+        // Check if either end is within the junction's radius
+        return distanceStart <= junction.getRadius() || distanceEnd <= junction.getRadius();
+    }
+
+    // Existing helper methods remain the same
+    private Lane getIncomingLaneFor(Road road, Junction junction) {
+        // Calculate distances from both ends of the road to the junction
+        double distanceStart = Math.hypot(road.getStartX() - junction.getX(), road.getStartY() - junction.getY());
+        double distanceEnd = Math.hypot(road.getEndX() - junction.getX(), road.getEndY() - junction.getY());
+
+        // Determine which end is connected and return the corresponding incoming lane
+        if (distanceEnd <= junction.getRadius()) {
+            // Road ends at the junction: incoming lane is forward (from start to end)
+            return road.getForwardLane();
+        } else if (distanceStart <= junction.getRadius()) {
+            // Road starts at the junction: incoming lane is backward (from end to start)
+            return road.getBackwardLane();
+        } else {
+            // Neither end connected (shouldn't occur as roadConnectsTo was true)
+            return null;
+        }
+    }
+
+    private boolean isVerticalLane(Lane lane) {
+        return Math.abs(lane.getStartX() - lane.getEndX()) < 0.1;
+    }
 
     /**
      * Creates a standard four-way intersection controlled by traffic lights
@@ -80,7 +222,7 @@ public class RoadNetwork {
      *
      * @param w Canvas width.
      * @param h Canvas height.
-     */
+     *//*
     private void createTrafficLightIntersection(double w, double h) {
         System.out.println("Creating Traffic Light Intersection Layout...");
         double junctionX = w / 2;
@@ -156,7 +298,7 @@ public class RoadNetwork {
         centerJunction.setupTrafficLights(manager, lightMap);
         System.out.println("Traffic light system configured for J" + centerJunction.getId());
     }
-
+*/
     /**
      * Helper method to create a {@link TrafficLight} instance and calculate its
      * appropriate position near the end of an incoming lane.
