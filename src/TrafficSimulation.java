@@ -51,7 +51,7 @@ public class TrafficSimulation extends Application {
         BorderPane root = new BorderPane(); // Main layout container
 
         // Initialize the drawing canvas and its graphics context
-        simulationCanvas = new Canvas(1000, 750); // Set preferred canvas size
+        simulationCanvas = new Canvas(700, 350); // Set preferred canvas size
         gc = simulationCanvas.getGraphicsContext2D();
 
         // Initialize simulation core components

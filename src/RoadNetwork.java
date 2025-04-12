@@ -82,31 +82,25 @@ public class RoadNetwork {
         Junction rightJunction = new Junction(w/2 + 200, h/2, junctionRadius, JunctionType.TRAFFIC_LIGHT);
         junctions.addAll(List.of(leftJunction, rightJunction));
 
-        // Central road starts/ends 20 units away from junctions to allow approach roads
+        // Central road connects directly between junctions (no gap)
         centralRoad = new Road(
-                leftJunction.getX() + leftJunction.getRadius() + 20, // Add 20-unit gap
+                leftJunction.getX() + leftJunction.getRadius(),
                 leftJunction.getY(),
-                rightJunction.getX() - rightJunction.getRadius() - 20, // Add 20-unit gap
+                rightJunction.getX() - rightJunction.getRadius(),
                 rightJunction.getY()
         );
         roads.add(centralRoad);
 
-        // Create roads for both junctions (now with valid approach roads)
-        createJunctionApproachRoads(leftJunction, w, h, true, centralRoad);
-        createJunctionApproachRoads(rightJunction, w, h, false, centralRoad);
+        // Create approach roads (modified to properly connect to central road)
+        createJunctionApproachRoads(leftJunction, w, h, true);
+        createJunctionApproachRoads(rightJunction, w, h, false);
 
-        // Configure traffic light systems
+        // Configure traffic light systems (no lights on central road)
         configureJunctionWithLights(leftJunction, 7000, 1500);
         configureJunctionWithLights(rightJunction, 5000, 2000);
-
-        System.out.println("Shared central road configured between junctions.");
     }
-    private void createJunctionApproachRoads(
-            Junction junction,
-            double w, double h,
-            boolean isLeftJunction,
-            Road centralRoad // Reference to the shared central road
-    ) {
+
+    private void createJunctionApproachRoads(Junction junction, double w, double h, boolean isLeftJunction) {
         double jx = junction.getX();
         double jy = junction.getY();
         double radius = junction.getRadius();
@@ -115,64 +109,14 @@ public class RoadNetwork {
         roads.add(new Road(jx, 0, jx, jy - radius));  // North approach
         roads.add(new Road(jx, jy + radius, jx, h));  // South approach
 
-        // East-West Roads (connect to shared central road instead of creating new ones)
+        // East-West Roads (only create non-central approaches)
         if (isLeftJunction) {
-            // Left Junction's EAST approach: connects to start of central road
-            roads.add(new Road(
-                    jx + radius, jy,
-                    centralRoad.getStartX(), centralRoad.getStartY() // Link to central road
-            ));
-            // West approach (unchanged)
+            // Left Junction only needs west approach (east is central road)
             roads.add(new Road(0, jy, jx - radius, jy));
         } else {
-            // Right Junction's WEST approach: connects to end of central road
-            roads.add(new Road(
-                    centralRoad.getEndX(), centralRoad.getEndY(),
-                    jx - radius, jy // Link to central road
-            ));
-            // East approach (unchanged)
+            // Right Junction only needs east approach (west is central road)
             roads.add(new Road(jx + radius, jy, w, jy));
         }
-    }
-    private void configureJunctionWithLights(Junction junction, long greenTime, long yellowTime) {
-        Map<Lane, TrafficLight> lightMap = new HashMap<>();
-
-        TrafficLightCycleManager manager = new TrafficLightCycleManager(
-                junction.getId(),
-                LightState.RED,
-                LightState.GREEN,
-                greenTime,
-                yellowTime,
-                greenTime + yellowTime
-        );
-        lightCycleManagers.add(manager);
-
-        for (Road road : roads) {
-            if (roadConnectsTo(road, junction)) {
-                Lane incomingLane = getIncomingLaneFor(road, junction);
-                if (incomingLane == null) continue;
-
-                // --- Skip ONLY the central road itself ---
-                boolean isCentralApproach = road == centralRoad; // Simplified check
-
-                if (isCentralApproach) {
-                    continue;
-                }
-
-                // --- Create light for valid lanes ---
-                TrafficLight light = createAndPlaceLightForLane(incomingLane, isVerticalLane(incomingLane));
-                lightMap.put(incomingLane, light);
-                trafficLights.add(light); // Explicitly add to list (redundant safety)
-
-                if (isVerticalLane(incomingLane)) {
-                    manager.addNsLight(light);
-                } else {
-                    manager.addEwLight(light);
-                }
-            }
-        }
-
-        junction.setupTrafficLights(manager, lightMap);
     }
 
 
@@ -191,6 +135,63 @@ public class RoadNetwork {
         // Check if either end is within the junction's radius
         return distanceStart <= junction.getRadius() || distanceEnd <= junction.getRadius();
     }
+    private void configureJunctionWithLights(Junction junction, long greenTime, long yellowTime) {
+        Map<Lane, TrafficLight> lightMap = new HashMap<>();
+        TrafficLightCycleManager manager = new TrafficLightCycleManager(
+                junction.getId(),
+                LightState.RED,
+                LightState.GREEN,
+                greenTime,
+                yellowTime,
+                greenTime + yellowTime
+        );
+        lightCycleManagers.add(manager);
+
+        // Track light counts per direction
+        int verticalLights = 0;
+        int horizontalLights = 0;
+
+        // First pass: Handle non-central road lights
+        for (Road road : roads) {
+            if (road == centralRoad) continue;
+
+            if (roadConnectsTo(road, junction)) {
+                Lane incomingLane = getIncomingLaneFor(road, junction);
+                if (incomingLane == null) continue;
+
+                boolean isVertical = isVerticalLane(incomingLane);
+
+                // Ensure both north and south get vertical lights
+                if (isVertical) {
+                    TrafficLight light = createAndPlaceLightForLane(incomingLane, true);
+                    lightMap.put(incomingLane, light);
+                    trafficLights.add(light);
+                    manager.addNsLight(light);
+                    verticalLights++;
+                }
+                // Handle east-west lights (excluding central road)
+                else if (horizontalLights < 2) {
+                    TrafficLight light = createAndPlaceLightForLane(incomingLane, false);
+                    lightMap.put(incomingLane, light);
+                    trafficLights.add(light);
+                    manager.addEwLight(light);
+                    horizontalLights++;
+                }
+            }
+        }
+
+        // Second pass: Add central road light if needed
+        Lane centralIncoming = getIncomingLaneFor(centralRoad, junction);
+        if (centralIncoming != null) {
+            TrafficLight centralLight = createAndPlaceLightForLane(centralIncoming, false);
+            lightMap.put(centralIncoming, centralLight);
+            trafficLights.add(centralLight);
+            manager.addEwLight(centralLight);
+        }
+
+        junction.setupTrafficLights(manager, lightMap);
+    }
+
 
     // Existing helper methods remain the same
     private Lane getIncomingLaneFor(Road road, Junction junction) {
@@ -430,6 +431,31 @@ public class RoadNetwork {
      * @param junction    The {@link Junction} the vehicle is currently at. Cannot be null.
      * @return The next {@link Lane} object to enter, or null if no valid exit is found (e.g., dead end).
      */
+    // Updated getNextLane to properly handle central road transitions
+    public Lane getNextLane(Lane arrivalLane, Junction junction) {
+        if (junction == null || arrivalLane == null) {
+            return null;
+        }
+
+        List<Road> possibleExitRoads = new ArrayList<>(junction.getConnectedRoads());
+        possibleExitRoads.remove(arrivalLane.getRoad());
+
+        // Remove special central road handling - let normal logic apply
+        if (possibleExitRoads.isEmpty()) {
+            return null;
+        }
+
+        Road nextRoad = possibleExitRoads.get(random.nextInt(possibleExitRoads.size()));
+
+        if (nextRoad.getStartJunction() == junction) {
+            return nextRoad.getForwardLane();
+        } else if (nextRoad.getEndJunction() == junction) {
+            return nextRoad.getBackwardLane();
+        } else {
+            return null;
+        }
+    }
+    /*
     public Lane getNextLane(Lane arrivalLane, Junction junction) {
         // Basic validation of inputs
         if (junction == null || arrivalLane == null) {
@@ -469,7 +495,7 @@ public class RoadNetwork {
             return null;
         }
     }
-
+*/
 
     // --- Standard Getters ---
 
