@@ -15,7 +15,7 @@ public class TrafficLight {
     private volatile LightState currentState; // The current state (RED, YELLOW, GREEN)
     private final double x, y; // The center coordinates for positioning the light fixture
     private final boolean vertical; // Orientation of the lamp arrangement (true for vertical stack, false for horizontal)
-
+    private final Lane controlledLane; // Added lane reference
     // Color constants for active (ON) and inactive (OFF) states of the lamps
     private static final Color RED_ON = Color.RED;
     private static final Color RED_OFF = Color.DARKRED.deriveColor(0, 1, 0.4, 1); // Dimmed red
@@ -48,13 +48,16 @@ public class TrafficLight {
      * @param vertical     True to arrange lamps vertically (top to bottom: R, Y, G),
      *                     false for horizontal arrangement (left to right: R, Y, G).
      */
-    public TrafficLight(LightState initialState, double x, double y, boolean vertical) {
-        this.id = nextId++; // Assign a unique ID
+    public TrafficLight(LightState initialState, double x, double y, boolean vertical, Lane controlledLane) {
+        this.id = nextId++;
         this.currentState = initialState;
         this.x = x;
         this.y = y;
         this.vertical = vertical;
-        // System.out.println("Created visual TrafficLight " + id + " at (" + x + "," + y + ")");
+        this.controlledLane = controlledLane; // Store controlled lane
+    }
+    public Lane getControlledLane() {
+        return controlledLane;
     }
 
     /**

@@ -1,4 +1,5 @@
 
+import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
@@ -104,7 +105,25 @@ public class Vehicle {
             updateVisuals();
         }
     }
+    /**
+     * Calculates straight-line distance to the end of the current lane (junction entrance)
+     */
+    public double getDistanceToJunction() {
+        if (currentLane == null) return Double.MAX_VALUE;
 
+        // Get vehicle's current position
+        double vehicleX = this.x;  // Your x-coordinate field name
+        double vehicleY = this.y;  // Your y-coordinate field name
+
+        // Get lane's endpoint (junction position)
+        double junctionX = currentLane.getEndX();
+        double junctionY = currentLane.getEndY();
+
+        // Calculate Euclidean distance manually
+        double dx = junctionX - vehicleX;
+        double dy = junctionY - vehicleY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
     /** Calculates comfortable deceleration rate. */
     private double getComfortableDeceleration() {
         return maxAcceleration * 1.2;

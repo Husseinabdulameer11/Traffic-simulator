@@ -315,6 +315,10 @@ public class RoadNetwork {
         double laneEndX = incomingLane.isForward() ? incomingLane.getEndX() : incomingLane.getStartX();
         double laneEndY = incomingLane.isForward() ? incomingLane.getEndY() : incomingLane.getStartY();
 
+
+        // Modified to pass the controlled lane
+
+
         // Calculate the normalized direction vector *along* the lane towards the junction
         double dirX, dirY;
         double laneStartX = incomingLane.isForward() ? incomingLane.getStartX() : incomingLane.getEndX();
@@ -341,7 +345,8 @@ public class RoadNetwork {
         double lightY = laneEndY - dirY * distBefore + perpY * offsetRight;
 
         // Create the TrafficLight instance. Initial state is arbitrary as the manager controls it.
-        TrafficLight light = new TrafficLight(LightState.RED, lightX, lightY, vertical);
+        // Modified to pass the controlled lane
+        TrafficLight light = new TrafficLight(LightState.RED, lightX, lightY, vertical, incomingLane);
         // Add the created light to the network's list for rendering purposes
         trafficLights.add(light);
         return light;

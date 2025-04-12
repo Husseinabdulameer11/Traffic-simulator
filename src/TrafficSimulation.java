@@ -279,6 +279,12 @@ public class TrafficSimulation extends Application {
                 // Accumulate the total simulation time
                 time += simulationDeltaTime;
 
+
+
+                for (TrafficLightCycleManager manager : roadNetwork.getLightCycleManagers()) {
+                    manager.updateCongestion(vehicleManager.getVehicles());
+                }
+
                 // --- Update Simulation Logic ---
                 // Update the state of all traffic lights based on their cycle managers
                 roadNetwork.updateTrafficLights(simulationDeltaTime * 1000); // Manager expects milliseconds
