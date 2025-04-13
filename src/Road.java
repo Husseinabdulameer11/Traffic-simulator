@@ -228,4 +228,5 @@ public class Road {
         // Use stream API to find the first lane where isForward is false
         return lanes.stream().filter(l -> !l.isForward()).findFirst().orElse(null);
     }
+
 }
